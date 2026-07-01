@@ -43,7 +43,7 @@ pub fn parse_interfaces(node: Node) -> Result<InterfaceMap, String> {
 
     for (i, si_el) in elements
         .children()
-        .filter(|n| n.has_tag_name("SERVICE-INTERFACE"))
+        .filter(|n| n.tag_name().name() == "SERVICE-INTERFACE")
         .enumerate()
     {
         let si = parse_service_interface(si_el)
@@ -66,7 +66,7 @@ fn parse_service_interface(node: Node) -> Result<ServiceInterface, String> {
     if let Some(es) = xml::find_child(node, "EVENTS") {
         for vdp in es
             .children()
-            .filter(|n| n.has_tag_name("VARIABLE-DATA-PROTOTYPE"))
+            .filter(|n| n.tag_name().name() == "VARIABLE-DATA-PROTOTYPE")
         {
             let event_sn = xml::get_shortname(vdp)?;
             let typref = xml::require_child(vdp, "TYPE-TREF")?;
@@ -82,7 +82,7 @@ fn parse_service_interface(node: Node) -> Result<ServiceInterface, String> {
 
     // Fields
     if let Some(fss) = xml::find_child(node, "FIELDS") {
-        for field in fss.children().filter(|n| n.has_tag_name("FIELD")) {
+        for field in fss.children().filter(|n| n.tag_name().name() == "FIELD") {
             let field_sn = xml::get_shortname(field)?;
             let typref = xml::require_child(field, "TYPE-TREF")?;
             si.fields.insert(

@@ -65,7 +65,7 @@ impl DataTypesParser {
     fn parse_implementation_data_types(&mut self, node: Node) -> Result<(), String> {
         for (i, idt) in node
             .descendants()
-            .filter(|n| n.has_tag_name("IMPLEMENTATION-DATA-TYPE"))
+            .filter(|n| n.tag_name().name() == "IMPLEMENTATION-DATA-TYPE")
             .enumerate()
         {
             self.parse_implementation_value_data_type(idt).map_err(|e| {
@@ -102,7 +102,7 @@ impl DataTypesParser {
         // APPLICATION-PRIMITIVE-DATA-TYPE
         for (i, apdt) in node
             .descendants()
-            .filter(|n| n.has_tag_name("APPLICATION-PRIMITIVE-DATA-TYPE"))
+            .filter(|n| n.tag_name().name() == "APPLICATION-PRIMITIVE-DATA-TYPE")
             .enumerate()
         {
             self.parse_application_data_type(apdt).map_err(|e| {
@@ -112,7 +112,7 @@ impl DataTypesParser {
         // APPLICATION-ARRAY-DATA-TYPE
         for (i, aadt) in node
             .descendants()
-            .filter(|n| n.has_tag_name("APPLICATION-ARRAY-DATA-TYPE"))
+            .filter(|n| n.tag_name().name() == "APPLICATION-ARRAY-DATA-TYPE")
             .enumerate()
         {
             self.parse_application_data_type(aadt).map_err(|e| {
@@ -122,7 +122,7 @@ impl DataTypesParser {
         // APPLICATION-RECORD-DATA-TYPE
         for (i, ardt) in node
             .descendants()
-            .filter(|n| n.has_tag_name("APPLICATION-RECORD-DATA-TYPE"))
+            .filter(|n| n.tag_name().name() == "APPLICATION-RECORD-DATA-TYPE")
             .enumerate()
         {
             self.parse_application_data_type(ardt).map_err(|e| {
@@ -232,7 +232,7 @@ impl DataTypesParser {
         let mut fields = Vec::new();
         for record in elements
             .children()
-            .filter(|n| n.has_tag_name("APPLICATION-RECORD-ELEMENT"))
+            .filter(|n| n.tag_name().name() == "APPLICATION-RECORD-ELEMENT")
         {
             let field_name = xml::get_shortname(record)?;
             let type_ref = xml::require_child(record, "TYPE-TREF")?;

@@ -37,24 +37,39 @@ pub fn resolve_basic_type(type_ref: &TypeReference) -> Option<BasicType> {
     if name.contains("string") {
         return type_ref
             .string_size
+            .filter(|&s| s > 0)
             .map(BasicType::FixedLengthString)
             .or(Some(BasicType::String));
     }
 
     // Order matters: check longer substrings before shorter ones so that
     // e.g. "uint16" is matched before "uint8".
-    match name.as_str() {
-        "uint8" | "int8" => Some(BasicType::Uint8), // AUTOSAR maps int8 → uint8 (octet)
-        "uint16" => Some(BasicType::Uint16),
-        "uint32" => Some(BasicType::Uint32),
-        "uint64" => Some(BasicType::Uint64),
-        "int16" => Some(BasicType::Int16),
-        "int32" => Some(BasicType::Int32),
-        "int64" => Some(BasicType::Int64),
-        "float" => Some(BasicType::Float),
-        "double" => Some(BasicType::Double),
-        "bool" | "boolean" => Some(BasicType::Boolean),
-        _ => None,
+    // Order matters: longer substrings first to avoid shadowing
+    // (e.g. "uint16" must be tested before "uint8").
+    // Use contains() rather than exact match so that prefixed names
+    // like "sint32" are recognised (same as Go).
+    if name.contains("uint16") {
+        Some(BasicType::Uint16)
+    } else if name.contains("uint32") {
+        Some(BasicType::Uint32)
+    } else if name.contains("uint64") {
+        Some(BasicType::Uint64)
+    } else if name.contains("uint8") || name.contains("int8") {
+        Some(BasicType::Uint8) // AUTOSAR maps int8 → uint8 (octet)
+    } else if name.contains("int16") {
+        Some(BasicType::Int16)
+    } else if name.contains("int32") {
+        Some(BasicType::Int32)
+    } else if name.contains("int64") {
+        Some(BasicType::Int64)
+    } else if name.contains("float") {
+        Some(BasicType::Float)
+    } else if name.contains("double") {
+        Some(BasicType::Double)
+    } else if name.contains("bool") {
+        Some(BasicType::Boolean)
+    } else {
+        None
     }
 }
 

@@ -59,7 +59,7 @@ impl TopologyParser {
 
         for (i, eth_phy_channel) in phy_channels
             .children()
-            .filter(|n| n.has_tag_name("ETHERNET-PHYSICAL-CHANNEL"))
+            .filter(|n| n.tag_name().name() == "ETHERNET-PHYSICAL-CHANNEL")
             .enumerate()
         {
             self.parse_ethernet_physical_channel(eth_phy_channel)
@@ -85,7 +85,7 @@ impl TopologyParser {
         if let Some(sockets) = xml::find_child(so_ad, "SOCKET-ADDRESSS") {
             for (i, socket) in sockets
                 .children()
-                .filter(|n| n.has_tag_name("SOCKET-ADDRESS"))
+                .filter(|n| n.tag_name().name() == "SOCKET-ADDRESS")
                 .enumerate()
             {
                 self.parse_socket_address(socket)
@@ -97,7 +97,7 @@ impl TopologyParser {
         if let Some(bundles) = xml::find_child(so_ad, "CONNECTION-BUNDLES") {
             for (i, bundle) in bundles
                 .children()
-                .filter(|n| n.has_tag_name("SOCKET-CONNECTION-BUNDLE"))
+                .filter(|n| n.tag_name().name() == "SOCKET-CONNECTION-BUNDLE")
                 .enumerate()
             {
                 self.parse_socket_connection_bundle(bundle)
@@ -118,7 +118,7 @@ impl TopologyParser {
         };
         for (i, instance) in provided_instances
             .children()
-            .filter(|n| n.has_tag_name("PROVIDED-SERVICE-INSTANCE"))
+            .filter(|n| n.tag_name().name() == "PROVIDED-SERVICE-INSTANCE")
             .enumerate()
         {
             self.parse_provided_service_instance(instance)
@@ -155,7 +155,7 @@ impl TopologyParser {
 
         for (i, scipdui) in pdus
             .children()
-            .filter(|n| n.has_tag_name("SOCKET-CONNECTION-IPDU-IDENTIFIER"))
+            .filter(|n| n.tag_name().name() == "SOCKET-CONNECTION-IPDU-IDENTIFIER")
             .enumerate()
         {
             self.parse_socket_connection_ipdu_identifier(scipdui)
@@ -192,7 +192,7 @@ impl TopologyParser {
     fn parse_pdu_triggerings(&mut self, node: Node) -> Result<(), String> {
         for (i, trig) in node
             .children()
-            .filter(|n| n.has_tag_name("PDU-TRIGGERING"))
+            .filter(|n| n.tag_name().name() == "PDU-TRIGGERING")
             .enumerate()
         {
             self.parse_pdu_triggering(trig)
@@ -215,7 +215,7 @@ impl TopologyParser {
 
 fn find_ar_package_by_name<'a>(node: Node<'a, 'a>, name: &str) -> Option<Node<'a, 'a>> {
     node.children()
-        .filter(|c| c.has_tag_name("AR-PACKAGE"))
+        .filter(|c| c.tag_name().name() == "AR-PACKAGE")
         .find(|c| xml::child_text(*c, "SHORT-NAME") == Some(name))
 }
 

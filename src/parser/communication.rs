@@ -49,7 +49,7 @@ impl CommunicationParser {
         let elements = xml::get_elements(node)?;
         for (i, isignal_ipdu) in elements
             .children()
-            .filter(|n| n.has_tag_name("I-SIGNAL-I-PDU"))
+            .filter(|n| n.tag_name().name() == "I-SIGNAL-I-PDU")
             .enumerate()
         {
             self.parse_i_signal_ipdu(isignal_ipdu)
@@ -83,7 +83,7 @@ impl CommunicationParser {
         let elements = xml::get_elements(node)?;
         for (i, isignal) in elements
             .children()
-            .filter(|n| n.has_tag_name("I-SIGNAL"))
+            .filter(|n| n.tag_name().name() == "I-SIGNAL")
             .enumerate()
         {
             self.parse_i_signal(isignal)
@@ -110,7 +110,7 @@ impl CommunicationParser {
 
 fn find_ar_package_by_name<'a>(node: Node<'a, 'a>, name: &str) -> Option<Node<'a, 'a>> {
     node.children()
-        .filter(|c| c.has_tag_name("AR-PACKAGE"))
+        .filter(|c| c.tag_name().name() == "AR-PACKAGE")
         .find(|c| xml::child_text(*c, "SHORT-NAME") == Some(name))
 }
 

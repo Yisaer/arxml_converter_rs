@@ -39,7 +39,7 @@ impl SoftwareTypesParser {
         // CLIENT-SERVER-INTERFACE
         for (i, csi) in elements
             .children()
-            .filter(|n| n.has_tag_name("CLIENT-SERVER-INTERFACE"))
+            .filter(|n| n.tag_name().name() == "CLIENT-SERVER-INTERFACE")
             .enumerate()
         {
             self.parse_client_server_interface(csi)
@@ -49,7 +49,7 @@ impl SoftwareTypesParser {
         // SENDER-RECEIVER-INTERFACE
         for (i, sri) in elements
             .children()
-            .filter(|n| n.has_tag_name("SENDER-RECEIVER-INTERFACE"))
+            .filter(|n| n.tag_name().name() == "SENDER-RECEIVER-INTERFACE")
             .enumerate()
         {
             self.parse_sender_receiver_interface(sri)
@@ -69,7 +69,7 @@ impl SoftwareTypesParser {
 
         for (i, cso) in operations
             .children()
-            .filter(|n| n.has_tag_name("CLIENT-SERVER-OPERATION"))
+            .filter(|n| n.tag_name().name() == "CLIENT-SERVER-OPERATION")
             .enumerate()
         {
             let (cso_sn, tref) = self
@@ -96,7 +96,7 @@ impl SoftwareTypesParser {
 
         for argument in arguments
             .children()
-            .filter(|n| n.has_tag_name("ARGUMENT-DATA-PROTOTYPE"))
+            .filter(|n| n.tag_name().name() == "ARGUMENT-DATA-PROTOTYPE")
         {
             if xml::child_text(argument, "DIRECTION") == Some("IN") {
                 let type_ref = xml::require_child(argument, "TYPE-TREF")?;
@@ -117,7 +117,7 @@ impl SoftwareTypesParser {
 
         for (i, vdp) in data_elements
             .children()
-            .filter(|n| n.has_tag_name("VARIABLE-DATA-PROTOTYPE"))
+            .filter(|n| n.tag_name().name() == "VARIABLE-DATA-PROTOTYPE")
             .enumerate()
         {
             let (k, v) = self
@@ -154,7 +154,7 @@ impl SoftwareTypesParser {
 
 fn find_ar_package_by_name<'a>(node: Node<'a, 'a>, name: &str) -> Option<Node<'a, 'a>> {
     node.children()
-        .filter(|c| c.has_tag_name("AR-PACKAGE"))
+        .filter(|c| c.tag_name().name() == "AR-PACKAGE")
         .find(|c| xml::child_text(*c, "SHORT-NAME") == Some(name))
 }
 

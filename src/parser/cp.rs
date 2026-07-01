@@ -50,11 +50,11 @@ impl CpParser {
     /// six required sub-packages, then delegates to each sub-parser.
     pub fn parse(&mut self, doc: &Document) -> Result<(), String> {
         let root = doc.root_element();
-        let autosar = if root.has_tag_name("AUTOSAR") {
+        let autosar = if root.tag_name().name() == "AUTOSAR" {
             root
         } else {
             root.children()
-                .find(|n| n.has_tag_name("AUTOSAR"))
+                .find(|n| n.tag_name().name() == "AUTOSAR")
                 .ok_or("no <AUTOSAR> root element")?
         };
 
@@ -259,7 +259,7 @@ impl TpConfigParser {
     fn parse_tp_config(&mut self, node: Node) -> Result<(), String> {
         for someip_tp in node
             .descendants()
-            .filter(|n| n.has_tag_name("SOMEIP-TP-CONNECTION"))
+            .filter(|n| n.tag_name().name() == "SOMEIP-TP-CONNECTION")
         {
             self.parse_someip_tp_connection(someip_tp);
         }
@@ -304,7 +304,7 @@ fn parse_data_type_mapping_sets(
 
     for (i, sub_dtm) in dtm
         .children()
-        .filter(|n| n.has_tag_name("DATA-TYPE-MAP"))
+        .filter(|n| n.tag_name().name() == "DATA-TYPE-MAP")
         .enumerate()
     {
         let adtr = xml::require_child(sub_dtm, "APPLICATION-DATA-TYPE-REF")?;
@@ -339,7 +339,7 @@ fn find_ar_package_by_name<'a>(
     name: &str,
 ) -> Option<Node<'a, 'a>> {
     node.children()
-        .filter(|c| c.has_tag_name("AR-PACKAGE"))
+        .filter(|c| c.tag_name().name() == "AR-PACKAGE")
         .find(|c| xml::child_text(*c, "SHORT-NAME") == Some(name))
 }
 

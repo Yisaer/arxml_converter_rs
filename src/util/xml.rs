@@ -12,9 +12,16 @@ use roxmltree::Node;
 // Generic helpers
 // ---------------------------------------------------------------------------
 
-/// Find the first child element with the given tag name.
+/// Check whether the node's local name (ignoring XML namespace) equals
+/// `tag`.  This is more robust than `has_tag_name()` because real
+/// ARXML files use a default `xmlns`.
+pub fn has_local_name(node: Node, tag: &str) -> bool {
+    node.tag_name().name() == tag
+}
+
+/// Find the first child element whose local name equals `tag`.
 pub fn find_child<'a>(node: Node<'a, 'a>, tag: &str) -> Option<Node<'a, 'a>> {
-    node.children().find(|c| c.has_tag_name(tag))
+    node.children().find(|c| has_local_name(*c, tag))
 }
 
 /// Like [`find_child`], but returns an error when the element is missing.
@@ -76,21 +83,21 @@ pub fn get_array_size_semantics(node: Node) -> Result<bool, String> {
 /// float, etc.).  Returns `Ok(())` when valid, `Err(...)` otherwise.
 pub fn valid_basic_type(r: &str) -> Result<(), String> {
     let name = extract_last_segment(r).to_lowercase();
-    let known = matches!(
-        name.as_str(),
-        "uint8"
-            | "uint16"
-            | "uint32"
-            | "uint64"
-            | "int8"
-            | "int16"
-            | "int32"
-            | "int64"
-            | "float"
-            | "double"
-            | "bool"
-    );
-    if known {
+    // Use substring matching (same as Go's strings.Contains) so that
+    // prefixed names like "sint32" / "uint8_t" are recognised.
+    // Order: longer names first to avoid "uint16" shadowing "uint8".
+    if name.contains("uint16")
+        || name.contains("uint32")
+        || name.contains("uint64")
+        || name.contains("uint8")
+        || name.contains("int16")
+        || name.contains("int32")
+        || name.contains("int64")
+        || name.contains("int8")
+        || name.contains("float")
+        || name.contains("double")
+        || name.contains("bool")
+    {
         Ok(())
     } else {
         Err(format!("invalid basic type: {}", r))

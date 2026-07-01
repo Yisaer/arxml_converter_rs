@@ -51,7 +51,7 @@ pub fn parse_i_autosar(node: Node) -> Result<ServiceMap, String> {
 
     for si_el in elements
         .children()
-        .filter(|n| n.has_tag_name("SOMEIP-SERVICE-INTERFACE-DEPLOYMENT"))
+        .filter(|n| n.tag_name().name() == "SOMEIP-SERVICE-INTERFACE-DEPLOYMENT")
     {
         let svc = parse_service_deployment(si_el)?;
         services.insert(svc.service_id, svc);
@@ -104,7 +104,7 @@ fn parse_event_deployments(
     let mut events = HashMap::new();
     for ed in eds
         .children()
-        .filter(|n| n.has_tag_name("SOMEIP-EVENT-DEPLOYMENT"))
+        .filter(|n| n.tag_name().name() == "SOMEIP-EVENT-DEPLOYMENT")
     {
         let esn = xml::get_shortname(ed)?;
         let eid_el = xml::require_child(ed, "EVENT-ID")?;
@@ -135,7 +135,7 @@ fn parse_field_deployments(
     let mut fields = HashMap::new();
     for fd in fds
         .children()
-        .filter(|n| n.has_tag_name("SOMEIP-FIELD-DEPLOYMENT"))
+        .filter(|n| n.tag_name().name() == "SOMEIP-FIELD-DEPLOYMENT")
     {
         let fsn = xml::get_shortname(fd)?;
         let ref_el = xml::require_child(fd, "FIELD-REF")?;

@@ -45,11 +45,11 @@ impl ApParser {
     /// Parse a complete AP ARXML document.
     pub fn parse(&mut self, doc: &Document) -> Result<(), String> {
         let root = doc.root_element();
-        let autosar = if root.has_tag_name("AUTOSAR") {
+        let autosar = if root.tag_name().name() == "AUTOSAR" {
             root
         } else {
             root.children()
-                .find(|n| n.has_tag_name("AUTOSAR"))
+                .find(|n| n.tag_name().name() == "AUTOSAR")
                 .ok_or("no <AUTOSAR> root element")?
         };
 
@@ -154,7 +154,7 @@ fn find_ar_package_by_name<'a>(
     name: &str,
 ) -> Option<Node<'a, 'a>> {
     node.children()
-        .filter(|c| c.has_tag_name("AR-PACKAGE"))
+        .filter(|c| c.tag_name().name() == "AR-PACKAGE")
         .find(|c| xml::child_text(*c, "SHORT-NAME") == Some(name))
 }
 

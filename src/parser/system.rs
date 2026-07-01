@@ -55,7 +55,7 @@ impl SystemParser {
         // CLIENT-SERVER-TO-SIGNAL-MAPPING
         for (i, cs_to_sig) in data_mappings
             .children()
-            .filter(|n| n.has_tag_name("CLIENT-SERVER-TO-SIGNAL-MAPPING"))
+            .filter(|n| n.tag_name().name() == "CLIENT-SERVER-TO-SIGNAL-MAPPING")
             .enumerate()
         {
             self.parse_client_server_to_signal_mapping(cs_to_sig)
@@ -65,7 +65,7 @@ impl SystemParser {
         // SENDER-RECEIVER-TO-SIGNAL-MAPPING
         for (i, sr_to_sig) in data_mappings
             .children()
-            .filter(|n| n.has_tag_name("SENDER-RECEIVER-TO-SIGNAL-MAPPING"))
+            .filter(|n| n.tag_name().name() == "SENDER-RECEIVER-TO-SIGNAL-MAPPING")
             .enumerate()
         {
             self.parse_sender_receiver_to_signal_mapping(sr_to_sig)

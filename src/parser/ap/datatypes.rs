@@ -20,7 +20,7 @@ pub fn parse_data_types(node: Node) -> Result<HashMap<String, DataType>, String>
 
     for (i, dt_el) in elements
         .children()
-        .filter(|n| n.has_tag_name("STD-CPP-IMPLEMENTATION-DATA-TYPE"))
+        .filter(|n| n.tag_name().name() == "STD-CPP-IMPLEMENTATION-DATA-TYPE")
         .enumerate()
     {
         let dt = parse_single(dt_el)
@@ -114,7 +114,7 @@ fn parse_structure(node: Node, sn: &str, category: &str) -> Result<DataType, Str
 
     for cpp_el in sub
         .children()
-        .filter(|n| n.has_tag_name("CPP-IMPLEMENTATION-DATA-TYPE-ELEMENT"))
+        .filter(|n| n.tag_name().name() == "CPP-IMPLEMENTATION-DATA-TYPE-ELEMENT")
     {
         let field_name = xml::get_shortname(cpp_el)?;
         let type_ref_el = xml::require_child(cpp_el, "TYPE-REFERENCE")?;
