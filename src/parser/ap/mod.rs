@@ -82,59 +82,48 @@ impl ApParser {
     /// eventID  → Event.eventRef  → ServiceInterface.Events\[ref\] → TypeRef
     ///         → FieldNotify.fieldRef → ServiceInterface.Fields\[ref\] → TypeRef
     /// TypeRef  → DataType
-    pub fn resolve_type(
-        &self,
-        service_id: u16,
-        event_id: u16,
-    ) -> Result<&DataType, String> {
+    pub fn resolve_type(&self, service_id: u16, event_id: u16) -> Result<&DataType, String> {
         let svc = self
             .services
             .get(&service_id)
             .ok_or_else(|| format!("service {service_id} not found"))?;
 
-        let iface_ref =
-            convert::extract_last(&svc.service_interface_ref).to_lowercase();
+        let iface_ref = convert::extract_last(&svc.service_interface_ref).to_lowercase();
         let iface = self
             .interfaces
             .get(&iface_ref)
-            .ok_or_else(|| {
-                format!("interface '{iface_ref}' not found for service {service_id}")
-            })?;
+            .ok_or_else(|| format!("interface '{iface_ref}' not found for service {service_id}"))?;
 
         // Try event first
         if let Some(event) = svc.events.get(&event_id) {
-            let event_ref =
-                convert::extract_last(&event.event_ref).to_lowercase();
+            let event_ref = convert::extract_last(&event.event_ref).to_lowercase();
             let si_event = iface.events.get(&event_ref).ok_or_else(|| {
                 format!(
                     "event '{event_ref}' not found in interface '{}'",
                     iface.short_name
                 )
             })?;
-            let type_ref =
-                convert::extract_last(&si_event.type_ref).to_lowercase();
-            return self.data_types.get(&type_ref).ok_or_else(|| {
-                format!("type '{type_ref}' not found for event {event_id}")
-            });
+            let type_ref = convert::extract_last(&si_event.type_ref).to_lowercase();
+            return self
+                .data_types
+                .get(&type_ref)
+                .ok_or_else(|| format!("type '{type_ref}' not found for event {event_id}"));
         }
 
         // Try field-notify
         if let Some(field_notify) = svc.field_notify.get(&event_id) {
-            let field_ref =
-                convert::extract_last(&field_notify.field_ref).to_lowercase();
+            let field_ref = convert::extract_last(&field_notify.field_ref).to_lowercase();
             let si_field = iface.fields.get(&field_ref).ok_or_else(|| {
                 format!(
                     "field '{field_ref}' not found in interface '{}'",
                     iface.short_name
                 )
             })?;
-            let type_ref =
-                convert::extract_last(&si_field.type_ref).to_lowercase();
-            return self.data_types.get(&type_ref).ok_or_else(|| {
-                format!(
-                    "type '{type_ref}' not found for field-notify {event_id}"
-                )
-            });
+            let type_ref = convert::extract_last(&si_field.type_ref).to_lowercase();
+            return self
+                .data_types
+                .get(&type_ref)
+                .ok_or_else(|| format!("type '{type_ref}' not found for field-notify {event_id}"));
         }
 
         Err(format!(
@@ -149,10 +138,7 @@ impl Default for ApParser {
     }
 }
 
-fn find_ar_package_by_name<'a>(
-    node: Node<'a, 'a>,
-    name: &str,
-) -> Option<Node<'a, 'a>> {
+fn find_ar_package_by_name<'a>(node: Node<'a, 'a>, name: &str) -> Option<Node<'a, 'a>> {
     node.children()
         .filter(|c| c.tag_name().name() == "AR-PACKAGE")
         .find(|c| xml::child_text(*c, "SHORT-NAME") == Some(name))

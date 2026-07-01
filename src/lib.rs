@@ -43,11 +43,11 @@ pub struct ArxmlCodec {
 #[derive(Debug)]
 enum CodecVariant {
     Cp {
-        parser: CpParser,
+        parser: Box<CpParser>,
         decoder: Decoder<'static>,
     },
     Ap {
-        parser: ApParser,
+        parser: Box<ApParser>,
         decoder: Decoder<'static>,
     },
 }
@@ -58,8 +58,7 @@ impl ArxmlCodec {
         let xml = fs::read_to_string(path.as_ref())
             .map_err(|e| format!("failed to read {}: {e}", path.as_ref().display()))?;
 
-        let doc = Document::parse(&xml)
-            .map_err(|e| format!("XML parse error: {e}"))?;
+        let doc = Document::parse(&xml).map_err(|e| format!("XML parse error: {e}"))?;
 
         let root = doc.root_element();
         let autosar = if root.has_tag_name("AUTOSAR") {
@@ -77,14 +76,20 @@ impl ArxmlCodec {
             parser.parse(&doc)?;
             let decoder = unsafe_decoder(parser.data_types());
             Ok(Self {
-                variant: CodecVariant::Ap { parser, decoder },
+                variant: CodecVariant::Ap {
+                    parser: Box::new(parser),
+                    decoder,
+                },
             })
         } else if is_cp_arxml(ar_packages) {
             let mut parser = CpParser::new();
             parser.parse(&doc)?;
             let decoder = unsafe_decoder(parser.application_data_types());
             Ok(Self {
-                variant: CodecVariant::Cp { parser, decoder },
+                variant: CodecVariant::Cp {
+                    parser: Box::new(parser),
+                    decoder,
+                },
             })
         } else {
             Err("ARXML does not appear to be CP or AP".into())
@@ -112,12 +117,7 @@ impl ArxmlCodec {
     }
 
     /// CP decode: resolve `(service_id, header_id)` then decode `data`.
-    pub fn decode_cp(
-        &self,
-        service_id: u16,
-        header_id: u32,
-        data: &[u8],
-    ) -> Result<Value, String> {
+    pub fn decode_cp(&self, service_id: u16, header_id: u32, data: &[u8]) -> Result<Value, String> {
         match &self.variant {
             CodecVariant::Cp { parser, decoder } => {
                 let dt = parser.resolve_type(service_id, header_id)?;
@@ -129,12 +129,7 @@ impl ArxmlCodec {
     }
 
     /// AP decode: resolve `(service_id, event_id)` then decode `data`.
-    pub fn decode_ap(
-        &self,
-        service_id: u16,
-        event_id: u16,
-        data: &[u8],
-    ) -> Result<Value, String> {
+    pub fn decode_ap(&self, service_id: u16, event_id: u16, data: &[u8]) -> Result<Value, String> {
         match &self.variant {
             CodecVariant::Ap { parser, decoder } => {
                 let dt = parser.resolve_type(service_id, event_id)?;
@@ -175,18 +170,14 @@ fn is_cp_arxml(ar_packages: roxmltree::Node) -> bool {
 // Unsafe helper — see SAFETY comment
 // ---------------------------------------------------------------------------
 
-fn unsafe_decoder(
-    types: &HashMap<String, DataType>,
-) -> Decoder<'static> {
+fn unsafe_decoder(types: &HashMap<String, DataType>) -> Decoder<'static> {
     // SAFETY: the ArxmlCodec owns the parser which owns the HashMap.
     // The Decoder's reference is pinned to 'static which is safe as
     // long as ArxmlCodec (and therefore the HashMap) outlives all
     // Decoder uses.  Since Decoder is stored inside the same
     // ArxmlCodec, this holds.
     let types: &'static _ = unsafe {
-        std::mem::transmute::<&HashMap<String, DataType>, &'static HashMap<String, DataType>>(
-            types,
-        )
+        std::mem::transmute::<&HashMap<String, DataType>, &'static HashMap<String, DataType>>(types)
     };
     Decoder::new(types)
 }

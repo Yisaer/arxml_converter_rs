@@ -37,9 +37,7 @@ impl SystemParser {
         let sn = xml::get_shortname(system_el)?;
         let category = xml::child_text(system_el, "CATEGORY");
 
-        if sn == "SystemDescription"
-            || category == Some("SYSTEM_DESCRIPTION")
-        {
+        if sn == "SystemDescription" || category == Some("SYSTEM_DESCRIPTION") {
             return self.parse_system_mapping(system_el);
         }
 
@@ -49,8 +47,7 @@ impl SystemParser {
     fn parse_system_mapping(&mut self, system_el: Node) -> Result<(), String> {
         let mappings = xml::require_child(system_el, "MAPPINGS")?;
         let system_mapping = xml::require_child(mappings, "SYSTEM-MAPPING")?;
-        let data_mappings =
-            xml::require_child(system_mapping, "DATA-MAPPINGS")?;
+        let data_mappings = xml::require_child(system_mapping, "DATA-MAPPINGS")?;
 
         // CLIENT-SERVER-TO-SIGNAL-MAPPING
         for (i, cs_to_sig) in data_mappings
@@ -75,24 +72,19 @@ impl SystemParser {
         Ok(())
     }
 
-    fn parse_client_server_to_signal_mapping(
-        &mut self,
-        node: Node,
-    ) -> Result<(), String> {
+    fn parse_client_server_to_signal_mapping(&mut self, node: Node) -> Result<(), String> {
         let call_signal_ref = match xml::find_child(node, "CALL-SIGNAL-REF") {
             Some(n) => n,
             None => return Ok(()),
         };
-        let cs_op_iref =
-            match xml::find_child(node, "CLIENT-SERVER-OPERATION-IREF") {
-                Some(n) => n,
-                None => return Ok(()),
-            };
-        let target_op_ref =
-            match xml::find_child(cs_op_iref, "TARGET-OPERATION-REF") {
-                Some(n) => n,
-                None => return Ok(()),
-            };
+        let cs_op_iref = match xml::find_child(node, "CLIENT-SERVER-OPERATION-IREF") {
+            Some(n) => n,
+            None => return Ok(()),
+        };
+        let target_op_ref = match xml::find_child(cs_op_iref, "TARGET-OPERATION-REF") {
+            Some(n) => n,
+            None => return Ok(()),
+        };
 
         self.operation_ref.insert(
             call_signal_ref.text().unwrap_or("").to_string(),
@@ -101,23 +93,16 @@ impl SystemParser {
         Ok(())
     }
 
-    fn parse_sender_receiver_to_signal_mapping(
-        &mut self,
-        node: Node,
-    ) -> Result<(), String> {
+    fn parse_sender_receiver_to_signal_mapping(&mut self, node: Node) -> Result<(), String> {
         let sr = match xml::find_child(node, "SYSTEM-SIGNAL-REF") {
             Some(n) => n,
             None => return Ok(()),
         };
-        let data_elem_iref =
-            match xml::find_child(node, "DATA-ELEMENT-IREF") {
-                Some(n) => n,
-                None => return Ok(()),
-            };
-        let target_proto_ref = match xml::find_child(
-            data_elem_iref,
-            "TARGET-DATA-PROTOTYPE-REF",
-        ) {
+        let data_elem_iref = match xml::find_child(node, "DATA-ELEMENT-IREF") {
+            Some(n) => n,
+            None => return Ok(()),
+        };
+        let target_proto_ref = match xml::find_child(data_elem_iref, "TARGET-DATA-PROTOTYPE-REF") {
             Some(n) => n,
             None => return Ok(()),
         };
@@ -163,9 +148,6 @@ mod tests {
         let mut parser = SystemParser::new();
         parser.parse_system(doc.root_element()).unwrap();
 
-        assert_eq!(
-            parser.operation_ref.get("/Sig/SS1").unwrap(),
-            "/Data/Speed"
-        );
+        assert_eq!(parser.operation_ref.get("/Sig/SS1").unwrap(), "/Data/Speed");
     }
 }

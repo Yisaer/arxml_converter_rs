@@ -23,8 +23,7 @@ pub fn parse_data_types(node: Node) -> Result<HashMap<String, DataType>, String>
         .filter(|n| n.tag_name().name() == "STD-CPP-IMPLEMENTATION-DATA-TYPE")
         .enumerate()
     {
-        let dt = parse_single(dt_el)
-            .map_err(|e| format!("index {i}: {e}"))?;
+        let dt = parse_single(dt_el).map_err(|e| format!("index {i}: {e}"))?;
         types.insert(dt.short_name.to_lowercase(), dt);
     }
     Ok(types)
@@ -43,11 +42,7 @@ fn parse_single(node: Node) -> Result<DataType, String> {
     }
 }
 
-fn parse_type_reference(
-    node: Node,
-    sn: &str,
-    category: &str,
-) -> Result<DataType, String> {
+fn parse_type_reference(node: Node, sn: &str, category: &str) -> Result<DataType, String> {
     let ref_el = xml::require_child(node, "TYPE-REFERENCE-REF")?;
     let ref_text = ref_el.text().unwrap_or("").to_string();
 
@@ -60,10 +55,10 @@ fn parse_type_reference(
     };
 
     let mut dt = DataType::new_type_reference(sn.to_string(), category.to_string(), ref_text);
-    if let Some(size) = string_size {
-        if let crate::ast::types::DataTypeKind::TypeReference(ref mut tr) = dt.kind {
-            tr.string_size = Some(size);
-        }
+    if let Some(size) = string_size
+        && let crate::ast::types::DataTypeKind::TypeReference(ref mut tr) = dt.kind
+    {
+        tr.string_size = Some(size);
     }
     Ok(dt)
 }

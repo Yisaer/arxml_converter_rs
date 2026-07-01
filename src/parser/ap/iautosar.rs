@@ -71,8 +71,8 @@ fn parse_service_deployment(node: Node) -> Result<Service, String> {
         return Err(format!("empty SERVICE-INTERFACE-REF in {sn}"));
     }
 
-    let events = parse_event_deployments(node, &sn)?;
-    let field_notify = parse_field_deployments(node, &sn)?;
+    let events = parse_event_deployments(node, sn)?;
+    let field_notify = parse_field_deployments(node, sn)?;
 
     if events.is_empty() && field_notify.is_empty() {
         return Err(format!("no events or fields in {sn}"));
@@ -92,10 +92,7 @@ fn parse_service_deployment(node: Node) -> Result<Service, String> {
     Ok(svc)
 }
 
-fn parse_event_deployments(
-    node: Node,
-    _svc_name: &str,
-) -> Result<HashMap<u16, Event>, String> {
+fn parse_event_deployments(node: Node, _svc_name: &str) -> Result<HashMap<u16, Event>, String> {
     let eds = match xml::find_child(node, "EVENT-DEPLOYMENTS") {
         Some(n) => n,
         None => return Ok(HashMap::new()),
@@ -141,9 +138,7 @@ fn parse_field_deployments(
         let ref_el = xml::require_child(fd, "FIELD-REF")?;
         let field_ref = ref_el.text().unwrap_or("");
         if field_ref.is_empty() {
-            return Err(format!(
-                "empty FIELD-REF in {svc_name} field {fsn}"
-            ));
+            return Err(format!("empty FIELD-REF in {svc_name} field {fsn}"));
         }
 
         if let Some(notifier) = xml::find_child(fd, "NOTIFIER") {

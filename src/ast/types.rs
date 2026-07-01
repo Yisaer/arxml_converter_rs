@@ -106,12 +106,7 @@ impl DataType {
     }
 
     /// Fixed-size array.
-    pub fn new_array(
-        short_name: String,
-        category: String,
-        element_ref: String,
-        size: u64,
-    ) -> Self {
+    pub fn new_array(short_name: String, category: String, element_ref: String, size: u64) -> Self {
         DataType {
             short_name,
             category,

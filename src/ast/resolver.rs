@@ -116,7 +116,10 @@ mod tests {
             type_name: "/StringType".into(),
             string_size: Some(64),
         };
-        assert_eq!(resolve_basic_type(&tr), Some(BasicType::FixedLengthString(64)));
+        assert_eq!(
+            resolve_basic_type(&tr),
+            Some(BasicType::FixedLengthString(64))
+        );
     }
 
     #[test]
@@ -149,10 +152,7 @@ mod tests {
 
     #[test]
     fn extract_trailing_segment() {
-        assert_eq!(
-            extract_type_name_from_ref("/PlatformTypes/Float"),
-            "float"
-        );
+        assert_eq!(extract_type_name_from_ref("/PlatformTypes/Float"), "float");
         assert_eq!(extract_type_name_from_ref("uint32"), "uint32");
     }
 }

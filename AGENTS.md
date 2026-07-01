@@ -98,6 +98,12 @@ arxml_converter_rs/
 
 每次代码修改完成后、提交前，必须完成以下自检步骤。这些步骤来自历史 PR review 中反复出现的返工模式（遗漏调用点、文档漂移、修复不治本等），目的是在 reviewer 看到代码之前先由自己消灭低级问题。
 
+### 格式与静态检查（最高优先级）
+- **每次修改 Rust 代码后，必须立即运行 `make fmt` 和 `make clippy`，两者都通过后才能继续下一步。**
+- `make clippy` 以 `-D warnings` 运行，任何 warning 都会导致失败，必须逐一修复。
+- 不得以 `#[allow(...)]` 方式绕过 clippy 检查，除非有充分理由并用注释说明。
+- 提交前必须确认 `make fmt` 和 `make clippy` 均通过（CI 会检查同样的内容）。
+
 ### 变更影响面分析
 - 当删除或重命名一个 public API（函数、类型、trait、enum variant、struct 字段）时，必须用 `rg`（ripgrep）全局搜索该名称，确保没有残留的调用点或文档引用。
 - 对于「删除型」变更，必须额外检查：

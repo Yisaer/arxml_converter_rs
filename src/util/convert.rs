@@ -9,10 +9,7 @@ use std::num::ParseIntError;
 ///
 /// Corresponds to Go `util.ToUint16`.
 pub fn to_u16(raw: &str) -> Result<u16, ParseIntError> {
-    raw.parse::<u16>().map_err(|e| {
-        // Keep the error kind; the caller can add context if needed.
-        e
-    })
+    raw.parse::<u16>()
 }
 
 /// Parse a decimal string into a `u32`.

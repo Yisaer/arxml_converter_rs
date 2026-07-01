@@ -77,16 +77,13 @@ impl SoftwareTypesParser {
                 .map_err(|e| format!("parse {i} CLIENT-SERVER-OPERATION: {e}"))?;
 
             if !cso_sn.is_empty() && !tref.is_empty() {
-                self.add_mapping(&sn, &cso_sn, &tref);
+                self.add_mapping(sn, &cso_sn, &tref);
             }
         }
         Ok(())
     }
 
-    fn parse_client_server_operation(
-        &self,
-        node: Node,
-    ) -> Result<(String, String), String> {
+    fn parse_client_server_operation(&self, node: Node) -> Result<(String, String), String> {
         let sn = xml::get_shortname(node)?;
 
         let arguments = match xml::find_child(node, "ARGUMENTS") {
@@ -124,16 +121,13 @@ impl SoftwareTypesParser {
                 .parse_variable_data_prototype(vdp)
                 .map_err(|e| format!("parse {i} VARIABLE-DATA-PROTOTYPE: {e}"))?;
             if !k.is_empty() && !v.is_empty() {
-                self.add_mapping(&sn, &k, &v);
+                self.add_mapping(sn, &k, &v);
             }
         }
         Ok(())
     }
 
-    fn parse_variable_data_prototype(
-        &self,
-        node: Node,
-    ) -> Result<(String, String), String> {
+    fn parse_variable_data_prototype(&self, node: Node) -> Result<(String, String), String> {
         let sn = xml::get_shortname(node)?;
 
         let type_ref = match xml::find_child(node, "TYPE-TREF") {

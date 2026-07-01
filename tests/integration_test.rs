@@ -38,18 +38,14 @@ fn minimal_cp_load_and_resolve() {
 #[test]
 fn minimal_cp_decode_u32() {
     let codec = ArxmlCodec::load(MINIMAL_CP).unwrap();
-    let v = codec
-        .decode_cp(10, 100, &[0x00, 0x00, 0x00, 0x2A])
-        .unwrap();
+    let v = codec.decode_cp(10, 100, &[0x00, 0x00, 0x00, 0x2A]).unwrap();
     assert_eq!(v, Value::U32(42));
 }
 
 #[test]
 fn minimal_cp_decode_max_u32() {
     let codec = ArxmlCodec::load(MINIMAL_CP).unwrap();
-    let v = codec
-        .decode_cp(10, 100, &[0xFF, 0xFF, 0xFF, 0xFF])
-        .unwrap();
+    let v = codec.decode_cp(10, 100, &[0xFF, 0xFF, 0xFF, 0xFF]).unwrap();
     assert_eq!(v, Value::U32(0xFFFF_FFFF));
 }
 
@@ -135,17 +131,12 @@ fn s1_cp_decode_wifi_ap_name_string() {
     //    \_____ length=8 ____/  \__ BOM ___/  \____ "Test" ____/  \_null_/
     let payload = &[0xEFu8, 0xBB, 0xBF, 0x54, 0x65, 0x73, 0x74, 0x00][..];
 
-    let v = codec
-        .decode_cp(33282, S1_CP_HEADER_ID, payload)
-        .unwrap();
+    let v = codec.decode_cp(33282, S1_CP_HEADER_ID, payload).unwrap();
 
     // The decoder produces the raw UTF-8 bytes including BOM and null.
     // The veloFlux pipeline is expected to do post-processing (strip BOM,
     // trim null) if needed.
-    assert_eq!(
-        v,
-        Value::Str("\u{FEFF}Test\u{0}".to_string())
-    );
+    assert_eq!(v, Value::Str("\u{FEFF}Test\u{0}".to_string()));
 }
 
 // ====================================================================
@@ -212,7 +203,8 @@ fn s1_ap_unknown_event_id() {
 ///
 /// Run manually with:
 ///   cargo test -- baq --ignored --nocapture
-const BAQ_ARXML: &str = "/Users/yisa/Downloads/Github/emqx/private/ekuiper_can/converter/spi/test/ar/baq.arxml";
+const BAQ_ARXML: &str =
+    "/Users/yisa/Downloads/Github/emqx/private/ekuiper_can/converter/spi/test/ar/baq.arxml";
 
 #[test]
 #[ignore = "requires ekuiper_can repo with 15MB baq.arxml"]

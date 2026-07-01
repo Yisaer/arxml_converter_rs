@@ -35,8 +35,8 @@ impl CommunicationParser {
     pub fn parse_communication(&mut self, node: Node) -> Result<(), String> {
         let ar_packages = xml::require_child(node, "AR-PACKAGES")?;
 
-        let pdus_el = find_ar_package_by_name(ar_packages, "PDUs")
-            .ok_or("no 'PDUs' AR-PACKAGE found")?;
+        let pdus_el =
+            find_ar_package_by_name(ar_packages, "PDUs").ok_or("no 'PDUs' AR-PACKAGE found")?;
         let signals_el = find_ar_package_by_name(ar_packages, "Signals")
             .ok_or("no 'Signals' AR-PACKAGE found")?;
 
@@ -74,8 +74,10 @@ impl CommunicationParser {
             None => return Ok(()),
         };
 
-        self.pdu_ref_map
-            .insert(sn.to_string(), i_signal_ref.text().unwrap_or("").to_string());
+        self.pdu_ref_map.insert(
+            sn.to_string(),
+            i_signal_ref.text().unwrap_or("").to_string(),
+        );
         Ok(())
     }
 
@@ -166,9 +168,6 @@ mod tests {
         let mut parser = CommunicationParser::new();
         parser.parse_communication(doc.root_element()).unwrap();
 
-        assert_eq!(
-            parser.signal_ref_map.get("SigA").unwrap(),
-            "/SystemSig/SS1"
-        );
+        assert_eq!(parser.signal_ref_map.get("SigA").unwrap(), "/SystemSig/SS1");
     }
 }

@@ -68,9 +68,8 @@ impl DataTypesParser {
             .filter(|n| n.tag_name().name() == "IMPLEMENTATION-DATA-TYPE")
             .enumerate()
         {
-            self.parse_implementation_value_data_type(idt).map_err(|e| {
-                format!("parse {i} IMPLEMENTATION-DATA-TYPE failed: {e}")
-            })?;
+            self.parse_implementation_value_data_type(idt)
+                .map_err(|e| format!("parse {i} IMPLEMENTATION-DATA-TYPE failed: {e}"))?;
         }
         Ok(())
     }
@@ -105,9 +104,8 @@ impl DataTypesParser {
             .filter(|n| n.tag_name().name() == "APPLICATION-PRIMITIVE-DATA-TYPE")
             .enumerate()
         {
-            self.parse_application_data_type(apdt).map_err(|e| {
-                format!("parse {i} APPLICATION-PRIMITIVE-DATA-TYPE: {e}")
-            })?;
+            self.parse_application_data_type(apdt)
+                .map_err(|e| format!("parse {i} APPLICATION-PRIMITIVE-DATA-TYPE: {e}"))?;
         }
         // APPLICATION-ARRAY-DATA-TYPE
         for (i, aadt) in node
@@ -115,9 +113,8 @@ impl DataTypesParser {
             .filter(|n| n.tag_name().name() == "APPLICATION-ARRAY-DATA-TYPE")
             .enumerate()
         {
-            self.parse_application_data_type(aadt).map_err(|e| {
-                format!("parse {i} APPLICATION-ARRAY-DATA-TYPE: {e}")
-            })?;
+            self.parse_application_data_type(aadt)
+                .map_err(|e| format!("parse {i} APPLICATION-ARRAY-DATA-TYPE: {e}"))?;
         }
         // APPLICATION-RECORD-DATA-TYPE
         for (i, ardt) in node
@@ -125,9 +122,8 @@ impl DataTypesParser {
             .filter(|n| n.tag_name().name() == "APPLICATION-RECORD-DATA-TYPE")
             .enumerate()
         {
-            self.parse_application_data_type(ardt).map_err(|e| {
-                format!("parse {i} APPLICATION-RECORD-DATA-TYPE: {e}")
-            })?;
+            self.parse_application_data_type(ardt)
+                .map_err(|e| format!("parse {i} APPLICATION-RECORD-DATA-TYPE: {e}"))?;
         }
         Ok(())
     }
@@ -199,24 +195,25 @@ impl DataTypesParser {
     ) -> Result<(), String> {
         let element = xml::require_child(root, "ELEMENT")?;
         let type_ref = xml::require_child(element, "TYPE-TREF")?;
-        let array_ref = convert::extract_last(
-            type_ref.text().ok_or("empty TYPE-TREF")?,
-        );
+        let array_ref = convert::extract_last(type_ref.text().ok_or("empty TYPE-TREF")?);
 
         let is_dynamic = xml::get_array_size_semantics(element)?;
         let size = if !is_dynamic {
             let max_elems = xml::require_child(element, "MAX-NUMBER-OF-ELEMENTS")?;
-            convert::to_u64(
-                max_elems.text().ok_or("empty MAX-NUMBER-OF-ELEMENTS")?,
-            )
-            .map_err(|e| format!("invalid MAX-NUMBER-OF-ELEMENTS: {e}"))?
+            convert::to_u64(max_elems.text().ok_or("empty MAX-NUMBER-OF-ELEMENTS")?)
+                .map_err(|e| format!("invalid MAX-NUMBER-OF-ELEMENTS: {e}"))?
         } else {
             0
         };
 
         self.application_data_types.insert(
             sn.to_lowercase(),
-            DataType::new_array(sn.to_string(), category.to_string(), array_ref.to_string(), size),
+            DataType::new_array(
+                sn.to_string(),
+                category.to_string(),
+                array_ref.to_string(),
+                size,
+            ),
         );
         Ok(())
     }
@@ -236,9 +233,7 @@ impl DataTypesParser {
         {
             let field_name = xml::get_shortname(record)?;
             let type_ref = xml::require_child(record, "TYPE-TREF")?;
-            let ref_text = convert::extract_last(
-                type_ref.text().ok_or("empty TYPE-TREF")?,
-            );
+            let ref_text = convert::extract_last(type_ref.text().ok_or("empty TYPE-TREF")?);
 
             fields.push(crate::ast::types::StructureField {
                 name: field_name.to_string(),

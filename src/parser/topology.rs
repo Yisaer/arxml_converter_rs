@@ -50,12 +50,9 @@ impl TopologyParser {
     fn parse_cluster(&mut self, cluster_ar_package: Node) -> Result<(), String> {
         let elements = xml::get_elements(cluster_ar_package)?;
         let eth_cluster = xml::require_child(elements, "ETHERNET-CLUSTER")?;
-        let eth_var =
-            xml::require_child(eth_cluster, "ETHERNET-CLUSTER-VARIANTS")?;
-        let eth_cond =
-            xml::require_child(eth_var, "ETHERNET-CLUSTER-CONDITIONAL")?;
-        let phy_channels =
-            xml::require_child(eth_cond, "PHYSICAL-CHANNELS")?;
+        let eth_var = xml::require_child(eth_cluster, "ETHERNET-CLUSTER-VARIANTS")?;
+        let eth_cond = xml::require_child(eth_var, "ETHERNET-CLUSTER-CONDITIONAL")?;
+        let phy_channels = xml::require_child(eth_cond, "PHYSICAL-CHANNELS")?;
 
         for (i, eth_phy_channel) in phy_channels
             .children()
@@ -159,30 +156,22 @@ impl TopologyParser {
             .enumerate()
         {
             self.parse_socket_connection_ipdu_identifier(scipdui)
-                .map_err(|e| {
-                    format!("parse {i} SOCKET-CONNECTION-IPDU-IDENTIFIER: {e}")
-                })?;
+                .map_err(|e| format!("parse {i} SOCKET-CONNECTION-IPDU-IDENTIFIER: {e}"))?;
         }
         Ok(())
     }
 
-    fn parse_socket_connection_ipdu_identifier(
-        &mut self,
-        node: Node,
-    ) -> Result<(), String> {
-        let header_id_el =
-            xml::require_child(node, "HEADER-ID")?;
+    fn parse_socket_connection_ipdu_identifier(&mut self, node: Node) -> Result<(), String> {
+        let header_id_el = xml::require_child(node, "HEADER-ID")?;
         let header_id = convert::to_u32(header_id_el.text().unwrap_or(""))
             .map_err(|e| format!("invalid HEADER-ID: {e}"))?;
 
-        let pdu_ref_el =
-            xml::require_child(node, "PDU-TRIGGERING-REF")?;
+        let pdu_ref_el = xml::require_child(node, "PDU-TRIGGERING-REF")?;
         let pdu_ref = pdu_ref_el.text().unwrap_or("");
 
         // Skip PDU-TRIGGERING-REFs that contain "return"
         if !pdu_ref.contains("return") {
-            self.header_id_ref
-                .insert(header_id, pdu_ref.to_string());
+            self.header_id_ref.insert(header_id, pdu_ref.to_string());
         }
         Ok(())
     }

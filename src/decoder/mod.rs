@@ -76,14 +76,9 @@ impl<'a> Decoder<'a> {
                 let mut offset = 0;
                 let mut fields = Vec::with_capacity(st.fields.len());
                 for sf in &st.fields {
-                    let field_dt = self
-                        .resolve_ref(&sf.type_ref)
-                        .ok_or_else(|| {
-                            format!(
-                                "unknown type '{}' for field '{}'",
-                                sf.type_ref, sf.name
-                            )
-                        })?;
+                    let field_dt = self.resolve_ref(&sf.type_ref).ok_or_else(|| {
+                        format!("unknown type '{}' for field '{}'", sf.type_ref, sf.name)
+                    })?;
                     let (n, v) = self.decode(&data[offset..], &field_dt)?;
                     offset += n;
                     fields.push((sf.name.clone(), v));
@@ -99,7 +94,7 @@ impl<'a> Decoder<'a> {
         data: &[u8],
         tr: &types::TypeReference,
     ) -> Result<(usize, Value), String> {
-        use crate::ast::resolver::{resolve_basic_type, BasicType};
+        use crate::ast::resolver::{BasicType, resolve_basic_type};
 
         let bt = resolve_basic_type(tr)
             .ok_or_else(|| format!("unresolved basic type: {}", tr.type_name))?;
@@ -118,8 +113,8 @@ impl<'a> Decoder<'a> {
             BasicType::Boolean => read_u8(data).map(|(n, v)| (n, Value::Bool(v != 0))),
             BasicType::String => {
                 // Variable-length string: consume rest of buffer as UTF-8.
-                let s = std::str::from_utf8(data)
-                    .map_err(|e| format!("invalid UTF-8 string: {e}"))?;
+                let s =
+                    std::str::from_utf8(data).map_err(|e| format!("invalid UTF-8 string: {e}"))?;
                 Ok((data.len(), Value::Str(s.to_string())))
             }
             BasicType::FixedLengthString(len) => {
@@ -246,9 +241,7 @@ fn ensure_len(data: &[u8], need: usize, type_name: &str) -> Result<(), String> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::ast::types::{
-        ArrayType, StructureField,
-    };
+    use crate::ast::types::{ArrayType, StructureField};
 
     fn types_map() -> HashMap<String, DataType> {
         // A simple map with one sub-type: `Point { x: u32, y: u32 }`
@@ -264,28 +257,19 @@ mod tests {
                 in_place: false,
             },
         ];
-        let point_dt = DataType::new_structure(
-            "Point".into(),
-            "STRUCTURE".into(),
-            point_fields,
-        );
+        let point_dt = DataType::new_structure("Point".into(), "STRUCTURE".into(), point_fields);
         [("point".to_string(), point_dt)].into_iter().collect()
     }
 
     fn decoder() -> Decoder<'static> {
         // Leak to get 'static — acceptable for tests.
-        let map: &'static HashMap<String, DataType> =
-            Box::leak(Box::new(types_map()));
+        let map: &'static HashMap<String, DataType> = Box::leak(Box::new(types_map()));
         Decoder::new(map)
     }
 
     #[test]
     fn decode_uint8() {
-        let dt = DataType::new_type_reference(
-            "u".into(),
-            "VALUE".into(),
-            "uint8".into(),
-        );
+        let dt = DataType::new_type_reference("u".into(), "VALUE".into(), "uint8".into());
         let d = decoder();
         let (n, v) = d.decode(&[0xAB], &dt).unwrap();
         assert_eq!(n, 1);
@@ -294,11 +278,7 @@ mod tests {
 
     #[test]
     fn decode_uint16_big_endian() {
-        let dt = DataType::new_type_reference(
-            "u".into(),
-            "VALUE".into(),
-            "uint16".into(),
-        );
+        let dt = DataType::new_type_reference("u".into(), "VALUE".into(), "uint16".into());
         let d = decoder();
         let (n, v) = d.decode(&[0x12, 0x34], &dt).unwrap();
         assert_eq!(n, 2);
@@ -307,11 +287,7 @@ mod tests {
 
     #[test]
     fn decode_uint32_big_endian() {
-        let dt = DataType::new_type_reference(
-            "u".into(),
-            "VALUE".into(),
-            "uint32".into(),
-        );
+        let dt = DataType::new_type_reference("u".into(), "VALUE".into(), "uint32".into());
         let d = decoder();
         let (n, v) = d.decode(&[0xAA, 0xBB, 0xCC, 0xDD], &dt).unwrap();
         assert_eq!(n, 4);
@@ -320,11 +296,7 @@ mod tests {
 
     #[test]
     fn decode_boolean_true() {
-        let dt = DataType::new_type_reference(
-            "b".into(),
-            "VALUE".into(),
-            "bool".into(),
-        );
+        let dt = DataType::new_type_reference("b".into(), "VALUE".into(), "bool".into());
         let d = decoder();
         let (n, v) = d.decode(&[1], &dt).unwrap();
         assert_eq!(n, 1);
@@ -333,11 +305,7 @@ mod tests {
 
     #[test]
     fn decode_boolean_false() {
-        let dt = DataType::new_type_reference(
-            "b".into(),
-            "VALUE".into(),
-            "bool".into(),
-        );
+        let dt = DataType::new_type_reference("b".into(), "VALUE".into(), "bool".into());
         let d = decoder();
         let (_n, v) = d.decode(&[0], &dt).unwrap();
         assert_eq!(v, Value::Bool(false));
@@ -345,11 +313,7 @@ mod tests {
 
     #[test]
     fn decode_float() {
-        let dt = DataType::new_type_reference(
-            "f".into(),
-            "VALUE".into(),
-            "float".into(),
-        );
+        let dt = DataType::new_type_reference("f".into(), "VALUE".into(), "float".into());
         let d = decoder();
         let (n, v) = d.decode(&[0x40, 0x49, 0x0F, 0xDB], &dt).unwrap();
         assert_eq!(n, 4);
@@ -397,21 +361,13 @@ mod tests {
         assert_eq!(n, 3);
         assert_eq!(
             v,
-            Value::Array(vec![
-                Value::U8(10),
-                Value::U8(20),
-                Value::U8(30),
-            ])
+            Value::Array(vec![Value::U8(10), Value::U8(20), Value::U8(30),])
         );
     }
 
     #[test]
     fn not_enough_bytes_error() {
-        let dt = DataType::new_type_reference(
-            "u".into(),
-            "VALUE".into(),
-            "uint32".into(),
-        );
+        let dt = DataType::new_type_reference("u".into(), "VALUE".into(), "uint32".into());
         let d = decoder();
         let err = d.decode(&[0xAA], &dt).unwrap_err();
         assert!(err.contains("not enough bytes for u32"));

@@ -10,8 +10,7 @@ use roxmltree::{Document, Node};
 use crate::ast::types::DataType;
 use crate::parser::{
     communication::CommunicationParser, datatypes::DataTypesParser,
-    software_types::SoftwareTypesParser, system::SystemParser,
-    topology::TopologyParser,
+    software_types::SoftwareTypesParser, system::SystemParser, topology::TopologyParser,
 };
 use crate::util::{convert, xml};
 
@@ -58,33 +57,28 @@ impl CpParser {
                 .ok_or("no <AUTOSAR> root element")?
         };
 
-        let ar_packages =
-            xml::require_child(autosar, "AR-PACKAGES")?;
+        let ar_packages = xml::require_child(autosar, "AR-PACKAGES")?;
 
         // Locate every required AR-PACKAGE
         let data_types_el = find_ar_package_by_name(ar_packages, "DataTypes")
             .ok_or("missing 'DataTypes' AR-PACKAGE")?;
-        let mapping_sets_el =
-            find_ar_package_by_name(ar_packages, "DataTypeMappingSets")
-                .ok_or("missing 'DataTypeMappingSets' AR-PACKAGE")?;
+        let mapping_sets_el = find_ar_package_by_name(ar_packages, "DataTypeMappingSets")
+            .ok_or("missing 'DataTypeMappingSets' AR-PACKAGE")?;
         let topology_el = find_ar_package_by_name(ar_packages, "Topology")
             .ok_or("missing 'Topology' AR-PACKAGE")?;
-        let communication_el =
-            find_ar_package_by_name(ar_packages, "Communication")
-                .ok_or("missing 'Communication' AR-PACKAGE")?;
-        let system_el = find_ar_package_by_name(ar_packages, "System")
-            .ok_or("missing 'System' AR-PACKAGE")?;
-        let sw_types_el =
-            find_ar_package_by_name(ar_packages, "SoftwareTypes")
-                .ok_or("missing 'SoftwareTypes' AR-PACKAGE")?;
+        let communication_el = find_ar_package_by_name(ar_packages, "Communication")
+            .ok_or("missing 'Communication' AR-PACKAGE")?;
+        let system_el =
+            find_ar_package_by_name(ar_packages, "System").ok_or("missing 'System' AR-PACKAGE")?;
+        let sw_types_el = find_ar_package_by_name(ar_packages, "SoftwareTypes")
+            .ok_or("missing 'SoftwareTypes' AR-PACKAGE")?;
 
         // 1) DataTypeMappingSets must be parsed first (data types need it)
         let mappings = parse_data_type_mapping_sets(mapping_sets_el)?;
         self.data_types_parser = DataTypesParser::new(mappings);
 
         // 2) DataTypes
-        self.data_types_parser
-            .parse_data_types(data_types_el)?;
+        self.data_types_parser.parse_data_types(data_types_el)?;
 
         // 3) Topology
         self.topology_parser.parse_topology(topology_el)?;
@@ -101,9 +95,7 @@ impl CpParser {
             .parse_software_types(sw_types_el)?;
 
         // 7) TpConfig (optional)
-        if let Some(tp_config_el) =
-            find_ar_package_by_name(ar_packages, "TpConfig")
-        {
+        if let Some(tp_config_el) = find_ar_package_by_name(ar_packages, "TpConfig") {
             let mut tp = TpConfigParser::new();
             tp.parse_tp_config(tp_config_el)?;
             self.tp_config_parser = Some(tp);
@@ -126,11 +118,7 @@ impl CpParser {
     /// `I_SIGNAL_I_PDU` → `I_SIGNAL_REF` → `PDU_REF` →
     /// `SYSTEM_SIGNAL_REF` → `OPERATION_REF` →
     /// `INTERFACE_REF` → `TYPE_TREF` → **DataType**.
-    pub fn resolve_type(
-        &self,
-        service_id: u16,
-        header_id: u32,
-    ) -> Result<&DataType, String> {
+    pub fn resolve_type(&self, service_id: u16, header_id: u32) -> Result<&DataType, String> {
         // 1. Verify service ID exists
         self.topology_parser
             .service_id_map
@@ -142,12 +130,11 @@ impl CpParser {
 
         // 3. Optional TP config override
         let i_signal_ipdu_short_name = self
-            .tp_sdu_ref_by_pdu_triggering_ref(&pdu_triggering_ref)
-            .unwrap_or(&pdu_triggering_ref);
+            .tp_sdu_ref_by_pdu_triggering_ref(pdu_triggering_ref)
+            .unwrap_or(pdu_triggering_ref);
 
         // 4. I-Signal-IPDU short name → I-SIGNAL-REF
-        let i_signal_ref =
-            self.i_signal_ref_by_i_signal_ipdu(i_signal_ipdu_short_name)?;
+        let i_signal_ref = self.i_signal_ref_by_i_signal_ipdu(i_signal_ipdu_short_name)?;
 
         // 5. extractLast(ISIGNALREF) → Communication PDURef
         let comm_pdu_ref = {
@@ -155,9 +142,7 @@ impl CpParser {
             self.communication_parser
                 .pdu_ref_map
                 .get(key)
-                .ok_or_else(|| {
-                    format!("no PDU ref for {i_signal_ref}")
-                })?
+                .ok_or_else(|| format!("no PDU ref for {i_signal_ref}"))?
         };
 
         // 6. extractLast(commPduRef) → SystemSignalRef
@@ -166,9 +151,7 @@ impl CpParser {
             self.communication_parser
                 .signal_ref_map
                 .get(key)
-                .ok_or_else(|| {
-                    format!("no signal ref for {comm_pdu_ref}")
-                })?
+                .ok_or_else(|| format!("no signal ref for {comm_pdu_ref}"))?
         };
 
         // 7. SystemSignalRef → OperationRef
@@ -176,22 +159,18 @@ impl CpParser {
             .system_parser
             .operation_ref
             .get(system_signal_ref)
-            .ok_or_else(|| {
-                format!("no operation ref for {system_signal_ref}")
-            })?;
+            .ok_or_else(|| format!("no operation ref for {system_signal_ref}"))?;
 
         // 8. extractLast2(operationRef) → (csiKey, csoKey) → InterfaceRef → tRef
         let (csi_key, cso_key) = extract_last2(operation_ref)?;
-        let cso_map =
-            self.software_types_parser
-                .interface_ref_map
-                .get(&csi_key)
-                .ok_or_else(|| {
-                    format!("no interface ref for {operation_ref}")
-                })?;
-        let t_ref = cso_map.get(&cso_key).ok_or_else(|| {
-            format!("no operation '{cso_key}' in interface '{csi_key}'")
-        })?;
+        let cso_map = self
+            .software_types_parser
+            .interface_ref_map
+            .get(&csi_key)
+            .ok_or_else(|| format!("no interface ref for {operation_ref}"))?;
+        let t_ref = cso_map
+            .get(&cso_key)
+            .ok_or_else(|| format!("no operation '{cso_key}' in interface '{csi_key}'"))?;
 
         // 9. extractLast(tRef) → DataType
         let dt_key = convert::extract_last(t_ref).to_lowercase();
@@ -203,29 +182,20 @@ impl CpParser {
 
     // ---- internal lookup helpers ----
 
-    fn pdu_triggering_ref_by_header_id(
-        &self,
-        header_id: u32,
-    ) -> Result<&String, String> {
+    fn pdu_triggering_ref_by_header_id(&self, header_id: u32) -> Result<&String, String> {
         self.topology_parser
             .header_id_ref
             .get(&header_id)
             .ok_or_else(|| format!("no header ref for ID {header_id}"))
     }
 
-    fn tp_sdu_ref_by_pdu_triggering_ref<'a>(
-        &'a self,
-        pdu_ref: &str,
-    ) -> Option<&'a String> {
+    fn tp_sdu_ref_by_pdu_triggering_ref<'a>(&'a self, pdu_ref: &str) -> Option<&'a String> {
         self.tp_config_parser
             .as_ref()
             .and_then(|tp| tp.pdu_map.get(pdu_ref))
     }
 
-    fn i_signal_ref_by_i_signal_ipdu(
-        &self,
-        short_name: &str,
-    ) -> Result<String, String> {
+    fn i_signal_ref_by_i_signal_ipdu(&self, short_name: &str) -> Result<String, String> {
         let key = convert::extract_last(short_name);
         self.topology_parser
             .pdu_triggering_ref
@@ -271,26 +241,22 @@ impl TpConfigParser {
             Some(n) => n,
             None => return,
         };
-        let transport_pdu =
-            match xml::find_child(node, "TRANSPORT-PDU-REF") {
-                Some(n) => n,
-                None => return,
-            };
+        let transport_pdu = match xml::find_child(node, "TRANSPORT-PDU-REF") {
+            Some(n) => n,
+            None => return,
+        };
         self.pdu_map.insert(
             transport_pdu.text().unwrap_or("").to_string(),
             tp_sdu.text().unwrap_or("").to_string(),
         );
     }
-
 }
 
 // ---------------------------------------------------------------------------
 // DataTypeMappingSet parser
 // ---------------------------------------------------------------------------
 
-fn parse_data_type_mapping_sets(
-    node: Node,
-) -> Result<HashMap<String, String>, String> {
+fn parse_data_type_mapping_sets(node: Node) -> Result<HashMap<String, String>, String> {
     let elements = xml::get_elements(node)?;
     let dtms = xml::require_child(elements, "DATA-TYPE-MAPPING-SET")?;
 
@@ -308,14 +274,10 @@ fn parse_data_type_mapping_sets(
         .enumerate()
     {
         let adtr = xml::require_child(sub_dtm, "APPLICATION-DATA-TYPE-REF")?;
-        let idtr =
-            xml::require_child(sub_dtm, "IMPLEMENTATION-DATA-TYPE-REF")?;
-        let adtr_key = convert::extract_last(
-            adtr.text().ok_or("empty APPLICATION-DATA-TYPE-REF")?,
-        );
-        let idtr_key = convert::extract_last(
-            idtr.text().ok_or("empty IMPLEMENTATION-DATA-TYPE-REF")?,
-        );
+        let idtr = xml::require_child(sub_dtm, "IMPLEMENTATION-DATA-TYPE-REF")?;
+        let adtr_key = convert::extract_last(adtr.text().ok_or("empty APPLICATION-DATA-TYPE-REF")?);
+        let idtr_key =
+            convert::extract_last(idtr.text().ok_or("empty IMPLEMENTATION-DATA-TYPE-REF")?);
 
         if mappings
             .insert(adtr_key.to_string(), idtr_key.to_string())
@@ -334,10 +296,7 @@ fn parse_data_type_mapping_sets(
 // Helpers
 // ---------------------------------------------------------------------------
 
-fn find_ar_package_by_name<'a>(
-    node: Node<'a, 'a>,
-    name: &str,
-) -> Option<Node<'a, 'a>> {
+fn find_ar_package_by_name<'a>(node: Node<'a, 'a>, name: &str) -> Option<Node<'a, 'a>> {
     node.children()
         .filter(|c| c.tag_name().name() == "AR-PACKAGE")
         .find(|c| xml::child_text(*c, "SHORT-NAME") == Some(name))
