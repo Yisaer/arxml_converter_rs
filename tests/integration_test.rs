@@ -197,43 +197,26 @@ fn s1_ap_unknown_event_id() {
 // Large real-world ARXML (baq.arxml — 15 MB CP file)
 // ====================================================================
 
-/// Path to the baq.arxml file from the ekuiper_can repository.
-/// This test is `#[ignore]` because the file is ~15 MB and lives in
-/// a sibling repository.
-///
-/// Run manually with:
-///   cargo test -- baq --ignored --nocapture
-const BAQ_ARXML: &str =
-    "/Users/yisa/Downloads/Github/emqx/private/ekuiper_can/converter/spi/test/ar/baq.arxml";
+const BAQ_ARXML: &str = concat!(
+    env!("CARGO_MANIFEST_DIR"),
+    "/tests/test_data/baq.arxml"
+);
 
 #[test]
-#[ignore = "requires ekuiper_can repo with 15MB baq.arxml"]
 fn baq_cp_load_and_verify_packages() {
-    if !std::path::Path::new(BAQ_ARXML).exists() {
-        eprintln!("skipping: baq.arxml not found at {}", BAQ_ARXML);
-        return;
-    }
     let codec = ArxmlCodec::load(BAQ_ARXML).unwrap();
-    // Verify the file is detected as CP (it has all 8 required CP packages).
     let _ = codec;
 }
 
 #[test]
-#[ignore = "requires ekuiper_can repo with 15MB baq.arxml"]
 fn baq_cp_resolve_example_service() {
-    if !std::path::Path::new(BAQ_ARXML).exists() {
-        eprintln!("skipping: baq.arxml not found at {}", BAQ_ARXML);
-        return;
-    }
     let codec = ArxmlCodec::load(BAQ_ARXML).unwrap();
-    // Attempt to resolve a known service from the topology.
     match codec.resolve_cp(33282, 0x82020005) {
         Ok(dt) => {
             assert!(!dt.short_name.is_empty());
         }
         Err(_e) => {
-            // It's OK if the exact IDs don't match — we just want to
-            // prove the file parses and the lookup chain runs.
+            // It's OK if the exact IDs don't match.
         }
     }
 }
