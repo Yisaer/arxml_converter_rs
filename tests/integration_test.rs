@@ -197,10 +197,7 @@ fn s1_ap_unknown_event_id() {
 // Large real-world ARXML (baq.arxml — 15 MB CP file)
 // ====================================================================
 
-const BAQ_ARXML: &str = concat!(
-    env!("CARGO_MANIFEST_DIR"),
-    "/tests/test_data/baq.arxml"
-);
+const BAQ_ARXML: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/tests/test_data/baq.arxml");
 
 #[test]
 fn baq_cp_load_and_verify_packages() {
